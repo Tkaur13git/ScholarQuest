@@ -1,0 +1,319 @@
+// "ScholarQuest" - A Gamified Scholarship Finder
+
+import React, { useState } from 'react';
+
+// Sample scholarships data
+const SCHOLARSHIPS = [
+  {
+    id: 1,
+    name: "STEM Stars Scholarship",
+    description: "For students majoring in STEM fields.",
+    criteria: { major: ["Engineering", "Computer Science", "Mathematics", "Physics"] },
+    reward: 100,
+  },
+  {
+    id: 2,
+    name: "Future Leaders Award",
+    description: "For students with leadership experience.",
+    criteria: { age: [18, 19, 20, 21, 22], major: ["Business", "Political Science"] },
+    reward: 80,
+  },
+  {
+    id: 3,
+    name: "Creative Minds Grant",
+    description: "For students in creative majors.",
+    criteria: { major: ["Art", "Design", "Music", "Literature"] },
+    reward: 90,
+  },
+  {
+    id: 4,
+    name: "Community Hero Scholarship",
+    description: "For students with community service experience.",
+    criteria: { },
+    reward: 70,
+  },
+  {
+    id: 5,
+    name: "Women in Tech Scholarship",
+    description: "For women in technology-related majors.",
+    criteria: { major: ["Computer Science", "Engineering"], gender: ["Female"] },
+    reward: 120,
+  },
+];
+
+const MAJORS = [
+  "Engineering",
+  "Computer Science",
+  "Mathematics",
+  "Physics",
+  "Business",
+  "Political Science",
+  "Art",
+  "Design",
+  "Music",
+  "Literature",
+];
+
+function matchesCriteria(scholarship, user) {
+  // Check each criteria; if present, must match
+  if (scholarship.criteria.major && !scholarship.criteria.major.includes(user.major)) {
+    return false;
+  }
+  if (scholarship.criteria.age && !scholarship.criteria.age.includes(Number(user.age))) {
+    return false;
+  }
+  if (scholarship.criteria.gender && !scholarship.criteria.gender.includes(user.gender)) {
+    return false;
+  }
+  return true;
+}
+
+function ScholarQuest() {
+  const [user, setUser] = useState({
+    name: "",
+    age: "",
+    major: "",
+    gender: "",
+    leadership: false,
+    community: false,
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [applied, setApplied] = useState([]);
+  const [xp, setXp] = useState(0);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setUser((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+  };
+
+  const handleApply = (scholarship) => {
+    if (!applied.includes(scholarship.id)) {
+      setApplied([...applied, scholarship.id]);
+      setXp(xp + scholarship.reward);
+    }
+  };
+
+  // Filter scholarships based on user input
+  let relevantScholarships = [];
+  if (submitted) {
+    relevantScholarships = SCHOLARSHIPS.filter((sch) => {
+      // Add extra logic for leadership/community checkboxes
+      if (sch.name === "Future Leaders Award" && !user.leadership) return false;
+      if (sch.name === "Community Hero Scholarship" && !user.community) return false;
+      return matchesCriteria(sch, user);
+    });
+  }
+
+  // Gamified: XP levels
+  const getLevel = (xp) => {
+    if (xp >= 300) return "Scholarship Master";
+    if (xp >= 200) return "Scholarship Pro";
+    if (xp >= 100) return "Scholarship Explorer";
+    if (xp >= 50) return "Scholarship Novice";
+    return "Scholarship Newbie";
+  };
+
+  return (
+    <div style={{
+      fontFamily: "Segoe UI, sans-serif",
+      maxWidth: 600,
+      margin: "40px auto",
+      background: "#f9f9ff",
+      borderRadius: 12,
+      boxShadow: "0 2px 12px #d0d0f0",
+      padding: 32
+    }}>
+      <h1 style={{color: "#4b3cc4", textAlign: "center"}}>🎓 ScholarQuest</h1>
+      <p style={{textAlign: "center", color: "#555"}}>Level up your future! Find and apply to scholarships tailored for you. Earn XP for every application!</p>
+      <div style={{
+        background: "#e6e6fa",
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 24,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <div>
+          <strong>XP:</strong> {xp} <span style={{marginLeft: 12, color: "#7c5fe6"}}>({getLevel(xp)})</span>
+        </div>
+        <div>
+          <span role="img" aria-label="trophy">🏆</span> Applications: {applied.length}
+        </div>
+      </div>
+      {!submitted ? (
+        <form onSubmit={handleSubmit} style={{marginBottom: 24}}>
+          <div style={{marginBottom: 12}}>
+            <label>
+              Name: <br/>
+              <input
+                type="text"
+                name="name"
+                value={user.name}
+                onChange={handleChange}
+                required
+                style={{width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc"}}
+              />
+            </label>
+          </div>
+          <div style={{marginBottom: 12}}>
+            <label>
+              Age: <br/>
+              <input
+                type="number"
+                name="age"
+                value={user.age}
+                onChange={handleChange}
+                required
+                min={16}
+                max={99}
+                style={{width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc"}}
+              />
+            </label>
+          </div>
+          <div style={{marginBottom: 12}}>
+            <label>
+              Major: <br/>
+              <select
+                name="major"
+                value={user.major}
+                onChange={handleChange}
+                required
+                style={{width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc"}}
+              >
+                <option value="">Select your major</option>
+                {MAJORS.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div style={{marginBottom: 12}}>
+            <label>
+              Gender: <br/>
+              <select
+                name="gender"
+                value={user.gender}
+                onChange={handleChange}
+                required
+                style={{width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ccc"}}
+              >
+                <option value="">Select your gender</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+                <option value="Nonbinary">Nonbinary</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </label>
+          </div>
+          <div style={{marginBottom: 12}}>
+            <label>
+              <input
+                type="checkbox"
+                name="leadership"
+                checked={user.leadership}
+                onChange={handleChange}
+              />{" "}
+              I have leadership experience
+            </label>
+          </div>
+          <div style={{marginBottom: 12}}>
+            <label>
+              <input
+                type="checkbox"
+                name="community"
+                checked={user.community}
+                onChange={handleChange}
+              />{" "}
+              I have community service experience
+            </label>
+          </div>
+          <button
+            type="submit"
+            style={{
+              background: "#4b3cc4",
+              color: "#fff",
+              padding: "10px 24px",
+              border: "none",
+              borderRadius: 6,
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🎯 Find Scholarships
+          </button>
+        </form>
+      ) : (
+        <div>
+          <h2 style={{color: "#4b3cc4"}}>Hi {user.name}! Here are your quests:</h2>
+          {relevantScholarships.length === 0 ? (
+            <div style={{margin: "24px 0", color: "#c44b3c"}}>
+              No scholarships matched your profile. Try changing your info!
+            </div>
+          ) : (
+            <ul style={{listStyle: "none", padding: 0}}>
+              {relevantScholarships.map((sch) => (
+                <li key={sch.id} style={{
+                  background: "#fff",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  padding: 16,
+                  boxShadow: "0 1px 4px #e0e0f0"
+                }}>
+                  <div style={{fontSize: 18, fontWeight: "bold", color: "#3c4bc4"}}>
+                    {sch.name} <span style={{fontSize: 14, color: "#7c5fe6"}}>+{sch.reward} XP</span>
+                  </div>
+                  <div style={{margin: "8px 0", color: "#555"}}>{sch.description}</div>
+                  <button
+                    disabled={applied.includes(sch.id)}
+                    onClick={() => handleApply(sch)}
+                    style={{
+                      background: applied.includes(sch.id) ? "#aaa" : "#4b3cc4",
+                      color: "#fff",
+                      padding: "6px 18px",
+                      border: "none",
+                      borderRadius: 5,
+                      fontWeight: "bold",
+                      cursor: applied.includes(sch.id) ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    {applied.includes(sch.id) ? "Applied!" : "Apply"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            onClick={() => { setSubmitted(false); setApplied([]); setXp(0); }}
+            style={{
+              marginTop: 24,
+              background: "#e6e6fa",
+              color: "#4b3cc4",
+              padding: "8px 20px",
+              border: "none",
+              borderRadius: 6,
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🔄 Start Over
+          </button>
+        </div>
+      )}
+      <div style={{marginTop: 32, fontSize: 13, color: "#888", textAlign: "center"}}>
+        <span role="img" aria-label="sparkles">✨</span> ScholarQuest: Level up your future, one scholarship at a time!
+      </div>
+    </div>
+  );
+}
+
+export default ScholarQuest;
